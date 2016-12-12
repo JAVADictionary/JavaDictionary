@@ -15,7 +15,7 @@ public class Mysql {
 		String url="jdbc:mysql://localhost:3306/Dictionary";
 		Properties info=new Properties();
 		info.put("user", "root");
-		info.put("password", "");
+		info.put("password", "nju");
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			conn=DriverManager.getConnection(url,info);
@@ -38,38 +38,68 @@ public class Mysql {
 		ResultSet rs=stmt.executeQuery(sql);
 		if(rs.next())
 			return false;
-		sql="insert into User(name,pwd) values("+name+","+pwd+");";
-		stmt.executeQuery(sql);
+		sql="insert into User(name,pwd) values('"+name+"','"+pwd+"');";
+		System.out.println(sql);
+		stmt.execute(sql);
 		return true;
 	}
 	synchronized void like(String word,String web) throws SQLException{
 		String sql="update wordlist set wordlist."+web+"=wordlist."+web+"+1 where wordlist.word="+word+";";
-		stmt.executeQuery(sql);
+		stmt.execute(sql);
 	}
 	ArrayList<String> search(String word) throws SQLException{
-		String sql="select * from wordlist where wordlist.word="+word+";";
+		String sql="select * from wordlist where wordlist.word='"+word+"';";
 		ResultSet rs=stmt.executeQuery(sql);
 		ArrayList<String> result=new ArrayList<String>();
-		Map<String,Integer> map=new HashMap<String, Integer>();
+		int jinshan=0;
+		int bing=0;
+		int youdao=0;
+		boolean ex=false;
 		while(rs.next()){
-			int baidu=rs.getInt(2);
-			map.put("baidu",baidu);
-			int bing=rs.getInt(3);
-			int youdao=rs.getInt(4);
-			map.put("bing",bing);
-			map.put("youdao",youdao);
+			jinshan=rs.getInt("jinshan");
+			bing=rs.getInt("bing");
+			youdao=rs.getInt("youdao");
+			ex=true;
 		}
-		List<Map.Entry<String, Integer>> list=new ArrayList<Map.Entry<String,Integer>>();
-		Collections.sort(list,new Comparator<Map.Entry<String, Integer>>() {
-			@Override
-			public int compare(Entry<String, Integer> arg0,
-					Entry<String, Integer> arg1) {
-				// TODO Auto-generated method stub
-				return arg1.getValue().compareTo(arg0.getValue());
+		if(!ex){
+			sql="insert into wordlist(word,jinshan,bing,youdao) values('"+word+"',0,0,0)";
+			stmt.execute(sql);
+		}
+		if(jinshan>bing){
+			if(jinshan>youdao){
+				result.add("jinshan");
+				if(bing>youdao){
+					result.add("bing");
+					result.add("youdao");
+				}
+				else{
+					result.add("youdao");
+					result.add("bing");
+				}
 			}
-		});
-		for(Map.Entry<String, Integer> e:list){
-			result.add(e.getKey());
+			else{
+				result.add("youdao");
+				result.add("jinshan");
+				result.add("bing");
+			}
+		}
+		else{
+			if(bing>youdao){
+				result.add("bing");
+				if(jinshan>youdao){
+					result.add("jinshan");
+					result.add("youdao");
+				}
+				else{
+					result.add("youdao");
+					result.add("jinshan");
+				}
+			}
+			else{
+				result.add("youdao");
+				result.add("bing");
+				result.add("jinshan");
+			}
 		}
 		return result;
 	}

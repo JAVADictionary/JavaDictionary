@@ -63,8 +63,10 @@ public class Server {
 					if(order.equals("login")){
 						user=input.readUTF();
 						String pwd=input.readUTF();
+						System.out.println(user+" "+pwd);
 						if(sql.TestUser(user, pwd)){
 							login=true;
+							System.out.println("true");
 							output.writeUTF("true");
 						}
 						else
@@ -73,34 +75,43 @@ public class Server {
 					else if(order.equals("register")){
 						String name=input.readUTF();
 						String pwd=input.readUTF();
+						System.out.println(name+" "+pwd);
 						if(sql.insertUser(name, pwd))
 							output.writeUTF("true");
 						else
 							output.writeUTF("false");
 					}
 					else if(order.equals("search")){
+						String op=input.readUTF();
 						String word=input.readUTF();
-						ArrayList<String> baidu=websearch.Baidu(word);
-						ArrayList<String> bing=websearch.Bing(word);
-						ArrayList<String> youdao=websearch.Youdao(word);
+						System.out.println(word);
+						if(op.equals("card")){
+							String accepter=input.readUTF();
+							Card cd=new Card(accepter,user,word);
+							System.out.println(accepter+" "+user+" "+word);
+							Cardlist.add(cd);
+						}
+						String Jinshan=websearch.Jinshan(word);
+						String bing=websearch.Bing(word);
+						String youdao=websearch.Youdao(word);
 						ArrayList<String> Inturn=sql.search(word);
 						for(int i=0;i<Inturn.size();i++){
-							if(Inturn.get(i).equals("baidu")){
-								;
-							}
+							if(Inturn.get(i).equals("jinshan")){
+								output.writeUTF("jinshan");
+								output.writeUTF(Jinshan);
+								System.out.println(Jinshan);
+							} 
 							else if(Inturn.get(i).equals("bing")){
-								;
+								output.writeUTF("bing");
+								output.writeUTF(bing);
+								System.out.println(bing);
 							}
 							else{
-								;
+								output.writeUTF("youdao");
+								output.writeUTF(youdao);
+								System.out.println(youdao);
 							}
 						}
-					}
-					else if(order.equals("card")){
-						String word=input.readUTF();
-						String accepter=input.readUTF();
-						Card cd=new Card(accepter,user,word);
-						Cardlist.add(cd);
 					}
 					output.flush();
 				}

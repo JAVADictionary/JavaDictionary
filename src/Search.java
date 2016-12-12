@@ -37,7 +37,7 @@ public class Search {
         }
         return null;
 	}
-	public ArrayList Bing(String word) throws IOException{
+	public String Bing(String word) throws IOException{
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		word = word.replaceAll(" ","+");
 		HttpGet getWordMean = new HttpGet("http://cn.bing.com/dict/search?q=" + word + "&go=%E6%90%9C%E7%B4%A2&qs=n&form=Z9LH5&pq="+word);
@@ -51,11 +51,11 @@ public class Search {
         	 String[] m2=means.split("，");
              System.out.println("释义:");
              if(m2.length>=3) {
-            	ArrayList arr=new ArrayList<String>();
+            	String arr="";
              	String[] p=m2[3].split("\"");
              	String[] m=p[0].split(" ");
              	for(int i=0;i*2<m.length;i++)
-             		arr.add(m[i*2]+" "+m[i*2+1]);
+             		arr=arr+m[i*2]+" "+m[i*2+1];
              	return arr;
              }
          } else {
@@ -63,7 +63,7 @@ public class Search {
          }
 		return null;
 	}
-	public ArrayList Youdao(String word) throws IOException{
+	public String Youdao(String word) throws IOException{
 		CloseableHttpClient httpClient = HttpClients.createDefault();
         word = word.replaceAll(" ","+");
         HttpGet getWordMean = new HttpGet("http://dict.youdao.com/search?q=" + word + "&keyfrom=dict.index");
@@ -77,9 +77,9 @@ public class Search {
             String means = m1.group();
             Pattern getChinese = Pattern.compile("(?m)<li>(.*?)</li>");
             Matcher m2 = getChinese.matcher(means);
-            ArrayList<String> arr=new ArrayList<String>();
+            String arr="";
             while (m2.find()) {
-                arr.add(m2.group(1));
+                arr+=m2.group(1);
             }
             return arr;
         } else {
@@ -87,5 +87,41 @@ public class Search {
             System.exit(0);
         }
 		return null;
+	}
+	public String Jinshan(String word) throws IOException{
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		word = word.replaceAll(" ","+");
+		HttpGet getWordMean = new HttpGet("http://www.iciba.com/" + word);
+        CloseableHttpResponse response = httpClient.execute(getWordMean);//取得返回的网页源码
+
+        String result = EntityUtils.toString(response.getEntity());
+        response.close();
+        Pattern searchMeanPattern = Pattern.compile("(?s)<ul class=\"base-list switch_part\" class=\"\">.*?</ul>");
+        Matcher m1 = searchMeanPattern.matcher(result);
+        if (m1.find()) {
+        	String means = m1.group();
+            String means1=means;
+            Pattern getChinese = Pattern.compile("(?s)<span class=\"prop\">(.*?)</span>"); //(?m)代表按行匹配
+            Matcher m2 = getChinese.matcher(means);
+            getChinese = Pattern.compile("(?s)<p>(.*?)</p>");
+            Matcher m3 = getChinese.matcher(means1);
+            getChinese = Pattern.compile("(?m)<span>(.*?)</span>");
+            String arr="";
+            while (m2.find()) {
+            	arr=arr+m2.group(1);
+            	if(m3.find()){
+            		String str=m3.group(1);
+            		Matcher m4 = getChinese.matcher(str);
+            		while(m4.find()){
+            			arr=arr+m4.group(1);
+            		}
+            	}
+            	arr=arr+"\n";
+            }
+            System.out.println(arr);
+            return arr;
+        }
+        
+        return null;
 	}
 }
