@@ -44,12 +44,12 @@ public class Mysql {
 		return true;
 	}
 	synchronized void like(String word,String web) throws SQLException{
-		String sql="update wordlist set wordlist."+web+"=wordlist."+web+"+1 where wordlist.word="+word+";";
+		String sql="update wordlist set wordlist."+web+"=wordlist."+web+"+1 where wordlist.word='"+word+"';";
 		stmt.execute(sql);
 	}
 	ArrayList<String> search(String word) throws SQLException{
 		String sql="select * from wordlist where wordlist.word='"+word+"';";
-		ResultSet rs=stmt.executeQuery(sql);
+		ResultSet rs=stmt.executeQuery(sql); 
 		ArrayList<String> result=new ArrayList<String>();
 		int jinshan=0;
 		int bing=0;

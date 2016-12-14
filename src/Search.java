@@ -49,7 +49,6 @@ public class Search {
         if (m1.find()) {
         	String means = m1.group();
         	 String[] m2=means.split("，");
-             System.out.println("释义:");
              if(m2.length>=3) {
             	String arr="";
              	String[] p=m2[3].split("\"");
@@ -83,7 +82,7 @@ public class Search {
             }
             return arr;
         } else {
-            System.out.println("未查找到释义.");
+            System.out.println("未查找到释义."); 
             System.exit(0);
         }
 		return null;
@@ -118,8 +117,8 @@ public class Search {
             	}
             	arr=arr+"\n";
             }
-            System.out.println(arr);
-            return arr;
+           
+           return arr;
         }
         
         return null;

@@ -26,10 +26,12 @@ public class Server {
 		 Socket socket;
 		 try{
 			 serversocket=new ServerSocket(8000);
-			 socket=serversocket.accept();
-			 System.out.println("新的用户连接");
-			 Control c=new Control(socket);
-			 executor.execute(c);
+			 while(true){
+				 socket=serversocket.accept();
+				 System.out.println("新的用户连接");
+				 Control c=new Control(socket);
+				 executor.execute(c);
+			 }
 			 
 		 }catch(IOException e){
 			 System.err.println(e);
@@ -71,6 +73,7 @@ public class Server {
 						}
 						else
 							output.writeUTF("false");
+						output.flush();
 					}
 					else if(order.equals("register")){
 						String name=input.readUTF();
@@ -80,6 +83,7 @@ public class Server {
 							output.writeUTF("true");
 						else
 							output.writeUTF("false");
+						output.flush();
 					}
 					else if(order.equals("search")){
 						String op=input.readUTF();
@@ -99,21 +103,25 @@ public class Server {
 							if(Inturn.get(i).equals("jinshan")){
 								output.writeUTF("jinshan");
 								output.writeUTF(Jinshan);
-								System.out.println(Jinshan);
 							} 
 							else if(Inturn.get(i).equals("bing")){
 								output.writeUTF("bing");
 								output.writeUTF(bing);
-								System.out.println(bing);
 							}
 							else{
 								output.writeUTF("youdao");
-								output.writeUTF(youdao);
-								System.out.println(youdao);
+								output.writeUTF(youdao); 
 							}
 						}
+						output.flush();
 					}
-					output.flush();
+					else if(order.equals("like")){
+						String word=input.readUTF();
+						String web=input.readUTF();
+						System.out.println(word+web);
+						sql.like(word, web);
+					}
+					
 				}
 			}catch(IOException | SQLException e){
 				System.err.println(e);
