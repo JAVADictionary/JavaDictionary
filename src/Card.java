@@ -1,20 +1,19 @@
+import java.awt.Image;
+import java.io.Serializable;
+
+import javax.swing.ImageIcon;
 
 public class Card {
 	String Accepter;
-	String word;
-	String Seeder;
-	public Card(String accepter,String seeder,String word){
+	ImageIcon img;
+	public Card(String accepter,ImageIcon img){
 		Accepter=accepter;
-		this.word=word;
-		this.Seeder=seeder;
+		this.img=img;
 	}
 	public String getAccepter(){
 		return Accepter;
 	}
-	public String getSeeder(){
-		return Seeder;
-	}
-	public String getWord(){
-		return word;
+	public ImageIcon getImg(){
+		return img;
 	}
 }

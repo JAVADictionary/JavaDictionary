@@ -1,8 +1,6 @@
 import javax.swing.*;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.awt.*;
 import java.sql.SQLException;
@@ -14,7 +12,6 @@ import java.util.concurrent.Executors;
 
 public class Server {
 	ArrayList<Card> Cardlist=new ArrayList<Card>();
-
 	Mysql sql=new Mysql();
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -39,37 +36,35 @@ public class Server {
 	}
 	public class Control implements Runnable{
 		String user;
-		Search websearch=new Search();
+		//Search websearch=new Search();
 		boolean login=false;
-		DataInputStream input;
-		DataOutputStream output;
+		ObjectInputStream input;
+		ObjectOutputStream output;
 		public Control(Socket socket) throws IOException{
-			input=new DataInputStream(socket.getInputStream());
-			output=new DataOutputStream(socket.getOutputStream());
+			input=new ObjectInputStream(socket.getInputStream());
+			output=new ObjectOutputStream(socket.getOutputStream());
 		}
 		@Override
 		public void run(){
 			try{
 				while(true){
-					if(login&&Cardlist.size()>0){
-						for(int i=0;i<Cardlist.size();i++){
-							if(user.equals(Cardlist.get(i).getAccepter())){
-								output.writeUTF("card");
-								output.writeUTF(Cardlist.get(i).getSeeder());
-								output.writeUTF(Cardlist.get(i).getWord());
-								Cardlist.remove(Cardlist.get(i));
-							}
-						}
-					}
 					String order=input.readUTF();
 					if(order.equals("login")){
 						user=input.readUTF();
 						String pwd=input.readUTF();
 						System.out.println(user+" "+pwd);
+						output.writeUTF("login");
 						if(sql.TestUser(user, pwd)){
 							login=true;
+							output.writeUTF(user);
 							System.out.println("true");
 							output.writeUTF("true");
+							ArrayList<String> all=sql.AllUser();
+							output.writeUTF((all.size()-1)+"");
+							for(int i=0;i<all.size();i++){
+								if(!all.get(i).equals(user))
+									output.writeUTF(all.get(i));
+							}
 						}
 						else
 							output.writeUTF("false");
@@ -78,6 +73,7 @@ public class Server {
 					else if(order.equals("register")){
 						String name=input.readUTF();
 						String pwd=input.readUTF();
+						output.writeUTF("register");
 						System.out.println(name+" "+pwd);
 						if(sql.insertUser(name, pwd))
 							output.writeUTF("true");
@@ -86,42 +82,50 @@ public class Server {
 						output.flush();
 					}
 					else if(order.equals("search")){
-						String op=input.readUTF();
 						String word=input.readUTF();
-						System.out.println(word);
-						if(op.equals("card")){
-							String accepter=input.readUTF();
-							Card cd=new Card(accepter,user,word);
-							System.out.println(accepter+" "+user+" "+word);
-							Cardlist.add(cd);
-						}
-						String Jinshan=websearch.Jinshan(word);
-						String bing=websearch.Bing(word);
-						String youdao=websearch.Youdao(word);
+						output.writeUTF("search");
+						output.writeUTF(word);
 						ArrayList<String> Inturn=sql.search(word);
 						for(int i=0;i<Inturn.size();i++){
-							if(Inturn.get(i).equals("jinshan")){
-								output.writeUTF("jinshan");
-								output.writeUTF(Jinshan);
-							} 
-							else if(Inturn.get(i).equals("bing")){
-								output.writeUTF("bing");
-								output.writeUTF(bing);
-							}
-							else{
-								output.writeUTF("youdao");
-								output.writeUTF(youdao); 
-							}
+							output.writeUTF(Inturn.get(i));
 						}
 						output.flush();
 					}
 					else if(order.equals("like")){
 						String word=input.readUTF();
 						String web=input.readUTF();
-						System.out.println(word+web);
+						System.out.println(word+" "+web);
 						sql.like(word, web);
 					}
-					
+					else if(order.equals("card")){
+						String size=input.readUTF();
+						int num=Integer.parseInt(size);
+						for(int i=0;i<num;i++){
+							String acc=input.readUTF();
+							ImageIcon img;
+							try {
+								img = (ImageIcon) input.readObject();
+								Card c=new Card(acc,img);
+								Cardlist.add(c); 
+							} catch (ClassNotFoundException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}
+					if(Cardlist.size()>0){
+						int numOfCard=Cardlist.size();
+						for(int i=0;i<numOfCard;i++){
+							if(Cardlist.get(i).getAccepter().equals(user)){
+								output.writeUTF("card");
+								output.writeObject(Cardlist.get(i).getImg());
+								Cardlist.remove(i);
+								i--;
+								numOfCard--;
+								output.flush();
+							}
+						}
+					}
 				}
 			}catch(IOException | SQLException e){
 				System.err.println(e);

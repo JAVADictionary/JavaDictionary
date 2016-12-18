@@ -26,15 +26,24 @@ public class Mysql {
 		} 
 	}
 	boolean TestUser(String name,String pwd) throws SQLException{
-		String sql="select pwd from User where name="+name+";";
+		String sql="select pwd from User where name='"+name+"';";
 		ResultSet rs=stmt.executeQuery(sql);
-		if(rs.next()&&pwd.equals(rs.getString(1))){
+		if(rs.next()&&pwd.equals(rs.getString("pwd"))){
 			return true;
 		}
 		return false;
 	}
+	public ArrayList<String> AllUser() throws SQLException{
+		String sql="select name from User;";
+		ResultSet rs=stmt.executeQuery(sql);
+		ArrayList<String> tmp=new ArrayList<String>();
+		while(rs.next()){
+			tmp.add(rs.getString("name"));
+		}
+		return tmp;
+	}
 	synchronized boolean insertUser(String name,String pwd) throws SQLException{
-		String sql="select * from User where name="+name+";";
+		String sql="select * from User where name='"+name+"';";
 		ResultSet rs=stmt.executeQuery(sql);
 		if(rs.next())
 			return false;
@@ -102,6 +111,5 @@ public class Mysql {
 			}
 		}
 		return result;
-	}
-	 
+	} 
 }
