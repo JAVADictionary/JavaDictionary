@@ -13,8 +13,8 @@ import java.util.concurrent.Executors;
 public class Server {
 	ArrayList<Card> Cardlist=new ArrayList<Card>();
 	Mysql sql=new Mysql();
+	HashMap<String,ObjectOutputStream> map=new HashMap<>();
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		new Server();
 	}
 	public Server(){
@@ -55,6 +55,7 @@ public class Server {
 						System.out.println(user+" "+pwd);
 						output.writeUTF("login");
 						if(sql.TestUser(user, pwd)){
+							map.put(user, output);
 							login=true;
 							output.writeUTF(user);
 							System.out.println("true");
@@ -65,10 +66,25 @@ public class Server {
 								if(!all.get(i).equals(user))
 									output.writeUTF(all.get(i));
 							}
+							output.flush();
+							int num=Cardlist.size();
+							for(int i=0;i<num;i++){
+								if(Cardlist.get(i).getAccepter().equals(user)){
+									output.writeUTF("card");
+									output.writeObject(Cardlist.get(i).getImg());
+									Cardlist.remove(i);
+									output.flush();
+									i--;
+									num--;
+								}
+							}
 						}
 						else
 							output.writeUTF("false");
 						output.flush();
+					}
+					else if(order.equals("logout")){
+						map.remove(user);
 					}
 					else if(order.equals("register")){
 						String name=input.readUTF();
@@ -98,32 +114,22 @@ public class Server {
 						sql.like(word, web);
 					}
 					else if(order.equals("card")){
-						String size=input.readUTF();
-						int num=Integer.parseInt(size);
-						for(int i=0;i<num;i++){
-							String acc=input.readUTF();
-							ImageIcon img;
-							try {
-								img = (ImageIcon) input.readObject();
+						String acc=input.readUTF();
+						ImageIcon img;
+						try {
+							img = (ImageIcon) input.readObject();
+							ObjectOutputStream Seedto=map.get(acc);
+							if(Seedto==null){
 								Card c=new Card(acc,img);
 								Cardlist.add(c); 
-							} catch (ClassNotFoundException e) {
+							}
+							else{
+								Seedto.writeUTF("card");
+								Seedto.writeObject(img);
+							}
+						} catch (ClassNotFoundException e) {
 								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-					}
-					if(Cardlist.size()>0){
-						int numOfCard=Cardlist.size();
-						for(int i=0;i<numOfCard;i++){
-							if(Cardlist.get(i).getAccepter().equals(user)){
-								output.writeUTF("card");
-								output.writeObject(Cardlist.get(i).getImg());
-								Cardlist.remove(i);
-								i--;
-								numOfCard--;
-								output.flush();
-							}
+							e.printStackTrace();
 						}
 					}
 				}
